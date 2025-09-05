@@ -14,7 +14,7 @@ from statsmodels.graphics.gofplots import ProbPlot
 from scipy import stats
 
 
-class Padding:
+class StatisticalModel:
 
     def __init__(self, write=False):
         self.lang = sys.argv[1]
@@ -52,18 +52,21 @@ class Padding:
                                'surp': model_data['surprisal']}
                                )
         padded_csv = merged.replace('', pd.NA).dropna()
-        #print(padded_csv)
 
         if log:
             padded_csv["log_ar"] = np.log2(padded_csv["ar"]) # log 
 
         if self.write:
-            #padded_csv.to_csv(f'{self.lang}_padded_surprisal_{self.model.upper()}_{self.context_size}_ppp.csv', sep='\t')
-            padded_csv.to_csv(f'{self.lang}_padded_surprisal_ppp.csv', sep='\t')
+            padded_csv.to_csv(f'{self.lang}_padded_surprisal_glms.csv', sep='\t')
         return padded_csv
 
 
     def center_means(self, padded_csv):
+        """
+        This function centers the means of each preditor by subtracting 
+        the mean of each predictor from the predictor value. Return an updated
+        Dataframe with extra columns. 
+        """
         padded_csv['surp_c'] = padded_csv['surp'] - np.mean(padded_csv['surp'])
         padded_csv['wl_c'] = padded_csv['wl'] - np.mean(padded_csv['wl'])
         padded_csv['first_c'] = padded_csv['first'] - np.mean(padded_csv['first'])
@@ -72,6 +75,9 @@ class Padding:
 
 
     def get_vif(self, padded_csv):
+        """
+        Calculates the Variance Inflation Factor (VIF).
+        """
         X = add_constant(padded_csv[["surp_c", "wl_c", "first_c", "last_c"]])
         X["surp:wl"] = padded_csv["surp_c"] * padded_csv["wl_c"]
         X["surp:first"] = padded_csv["surp_c"] * padded_csv["first_c"]
@@ -83,6 +89,10 @@ class Padding:
 
 
     def transform_coeff(self, result):
+        """
+        Transforms the coefficients of the GLMs in syllables per second.
+        Returns the transformed coefficients.
+        """
         coeff = np.exp2(result.params)
         ex_coeff = pd.Series(coeff, index=coeff.index)
         intercept = ex_coeff['Intercept']
@@ -91,11 +101,11 @@ class Padding:
         return transformed_full
 
 
-    def glmm(self, padded_csv, model, save_fig=False, write_summary=False):
+    def glms(self, padded_csv, model, save_fig=False, write_summary=False):
         padded_csv = self.center_means(padded_csv)
         smodel = smf.glm("log_ar ~ surp_c + wl_c + first_c + last_c + surp_c:first_c + surp_c:last_c + surp_c:wl_c",
                         data=padded_csv, family=sm.families.Gaussian())
-        result = smodel.fit() # lbfgs
+        result = smodel.fit()
         res_summary = result.summary()
         
         print('--Transformed:')
@@ -105,7 +115,7 @@ class Padding:
 
         if write_summary:
             cw = model.split('_')[-1]
-            path = f'{self.lang}_{model}_{cw}_glmm_summary.txt'
+            path = f'{self.lang}_{model}_{cw}_glms_summary.txt'
             with open(path, 'w') as f:
                 f.write(res_summary.as_text())
 
@@ -127,7 +137,7 @@ class Padding:
 
 
 if __name__ == '__main__':
-    model = Padding(write=False)
+    model = StatisticalModel(write=False)
     all_data, gpt2_512_data, gpt2_256_data, gpt2_128_data, bert_512_data, bert_256_data, bert_128_data, chap_data = model.open_csv() 
     gpt2_512 = model.combine_csv(all_data, gpt2_512_data, chap_data, log=True)
     gpt2_512['model'] = "GPT2-512"
@@ -153,23 +163,24 @@ if __name__ == '__main__':
         print(mess)
         print('#'*len(line))
        
-        model.glmm(mod[0], mod[1], save_fig=False, write_summary=False)
+        model.glms(mod[0], mod[1], save_fig=False, write_summary=False) # full GLMs
         print(model.get_vif(mod[0]))
-        mod[0].to_csv(f'ENGKJV_padded_prova_{mod[1]}.csv', sep='\t')
-
+        
 
     aic_data = {'model': [], 'aic': []}
     for md in datasets:
         smodel = smf.glm("log_ar ~ surp_c + wl_c + first_c + last_c + surp_c:first_c + surp_c:last_c + surp_c:wl_c",
                        data=md[0], family=sm.families.Gaussian())
         nullmodel = smf.glm("log_ar ~ wl_c + first_c + last_c",
-                        data=md[0], family=sm.families.Gaussian())
+                        data=md[0], family=sm.families.Gaussian()) # null GLMs
         
         result = smodel.fit() # lbfgs
         result_null = nullmodel.fit()
 
         delta_ll = result.llf - result_null.llf
+        print('--Full GLM Log-Likelikood:')
         print(result.llf)
+        print('--Null GLM Log-Likelihood)
         print(result_null.llf)
         print(f"Δ Log-Likelihood for {md[1]}: {delta_ll:.3f}")
 
