@@ -16,14 +16,12 @@ import copy
 class OrthographicText:
 
     def __init__(self, write=False, test=False, open_json=True):
-        self.language = sys.argv[1] # Bible ID, "ENGWWH
+        self.language = sys.argv[1] # Bible ID-code: ENGKJV
         self.audio_url = f"https://live.bible.is/bible/{self.language}/MAT/1"
-        self.root_path = "/Users/matteo/Desktop/HT2024/5LN709_master_thesis/PIPELINE_REV" # CHANGED
-        self.audio_data = {'ENGKJV': "/Volumes/One Touch/audio/audio/English_eng_KJV_NT_Non-Drama",
-                           'NLDHSV': "/Volumes/One Touch/audio/audio/Dutch_nld_HSV_NT_Non-Drama",
-                           'RUSDPI': "/Volumes/One Touch/audio/audio/Russian_rus_DPI_NT_Non-Drama",
-                           'SPAWTC': "/Volumes/One Touch/audio/audio/Spanish_spa_WTC_NT_Non-Drama",
-                           'FIN38CB': "/Volumes/One Touch/audio/audio/Finnish_fin_38V_NT_Non-Drama"
+        self.root_path = "/Users/matteo/Desktop/HT2024/5LN709_master_thesis/PIPELINE_REV" 
+        self.audio_data = {'ENGKJV': "/Volumes/One Touch/audio/audio/English_eng_KJV_NT_Non-Drama" # change the audio folder
+                           #'RUSDPI': "/Volumes/One Touch/audio/audio/Russian_rus_DPI_NT_Non-Drama", # optional language
+                           #'SPAWTC': "/Volumes/One Touch/audio/audio/Spanish_spa_WTC_NT_Non-Drama", # optional language
                            }
         self.write = write
         self.test = test
@@ -88,7 +86,6 @@ class OrthographicText:
         format /LANG_CODE/BIBLE_BOOK/chapter number.
         """
         bible_urls = []
-        #base_url = f"https://live.bible.is/bible/{lan}"
         for bible in nt:
             bible_order = bible['book_order'] # CHANGE
             bible_name = ''.join(bible['name'].split()) # BO1 ...
@@ -135,7 +132,7 @@ class OrthographicText:
 
     def file_format(self, path):
         """
-        Makes a list of filen names with format B01_01_Matthew_CODE.
+        Makes a list of filenames with format B01_01_Matthew_CODE.
         Assuring same file format for MAUS.
         """
         if not os.path.isdir(path):  # Check if path is a directory
@@ -161,13 +158,9 @@ class OrthographicText:
         
         audio_path = self.audio_data.get(self.language)
         audio_names = self.file_format(audio_path)
-        #print(audio_names) #DEBUG
-
-        #for an, ntu in zip(audio_names, new_testament_urls):
-        #    print(an, ntu)
-        #print(f'--Audio names: {len(audio_names)}')
-        #print(f'--Testament Urls: {len(new_testament_urls)}')
-        #assert (len(audio_names)) == (len(new_testament_urls)), f"Warning: the number of audio files ({len(audio_names)}) and urls ({len(new_testament_urls)}) mismatch."
+        #print(f'--Audio names: {len(audio_names)}') #DEBUG
+        #print(f'--Testament Urls: {len(new_testament_urls)}') #DEBUG
+        assert (len(audio_names)) == (len(new_testament_urls)), f"Warning: the number of audio files ({len(audio_names)}) and urls ({len(new_testament_urls)}) mismatches."
         
         if self.open_json:
             folder = f'{self.language}-JSON'
@@ -184,7 +177,7 @@ class OrthographicText:
 
         print(f'--Audio names: {len(audio_names)}')
         print(f'--Testament Urls: {len(new_testament_urls)}')
-       #assert (len(audio_names)) == (len(new_testament_urls)), f"Warning: the number of audio files ({len(audio_names)}) and urls ({len(new_testament_urls)}) mismatch."
+        #assert (len(audio_names)) == (len(new_testament_urls)), f"Warning: the number of audio files ({len(audio_names)}) and urls ({len(new_testament_urls)}) mismatch."
 
         # Try less files
         if self.test:
@@ -206,18 +199,20 @@ class OrthographicText:
             d = dct.get('orth').get('txt')
             for txt in d:
                 txt = ' '.join(txt.split())
-                txt = txt.replace('“', "").replace("”", "").replace("’", "'").replace("‘", "") #remove this shitty crap ENG
+                txt = txt.replace('“', "").replace("”", "").replace("’", "'").replace("‘", "") #remove quotation marks
+
+                # Spanish and Russian need these extra steps before tokenizing
                 #if self.language == 'SPAWTC':
                 #    txt = txt.replace('¡', "").replace("¿", "").replace("»", "'").replace("«", "").replace("—", "").replace("(", "").replace(")", "")
                 #elif self.language == 'RUSDPI':
-                #    txt = txt.replace("—", "") #remove this shitty crap SPA
+                #    txt = txt.replace("—", "") 
                 #print('--Text with replaced characters:')
                 #print(txt)
                 #print('_'*20)
+                
                 txt = sent_tokenize(txt)
-                #print('--Text using sentence tokenizer:')
-                #print(txt)
-            
+                #print('--Text using sentence tokenizer:') #DEBUG
+                #print(txt) #DEBUG
                 for sent in txt:
                     match = re.search(regex, sent)
                     if match:
@@ -241,12 +236,9 @@ class OrthographicText:
 
     def write_to_path(self):
         """
-        Write .txt files in path "CURRENT_FOLDER/LANG-ID/text".
+        Write .txt files in path "ROOT/LANG-ID/text".
         """
-        #destination_path = '/Users/matteo/Desktop'
-        #destination_path = "/Volumes/One Touch/MacAir-2025/5LN709/audio/ENGKJV" #for Hard Drive
-        destination_path = "/Volumes/One Touch/MacAir-2025/5LN709/audio"
-        #destination_path = "/proj/uppmax2024-2-24/magi5470/scripts/surprisal" #ENGWWH
+        destination_path = "/Volumes/One Touch/MacAir-2025/5LN709/audio" # change to ROOT/LANG_ID/text
 
         folder = f'{self.language}' # ENGKJV, ENGWWH...
         folder_name = os.path.join(destination_path, folder)
@@ -280,8 +272,7 @@ class OrthographicText:
 
 
 if __name__ == "__main__":
-    model = OrthographicText(write=False, test=False, open_json=True)
-    #model.main()
+    model = OrthographicText(write=False, test=False, open_json=True) # write=TRUE for writing 260 .txt files
     orth = model.norm_orth
     raw = model.raw_orth
     print('--Raw Texts:'+'\n')
@@ -292,9 +283,6 @@ if __name__ == "__main__":
     print('-'*20)
     print(model.audio_names[:1])
 
+    #DEBUG
     #for an, txt in zip(model.audio_names, raw):
     #    print(an+'\n', txt.get('orth').get('txt'))
-
-    #model.write_to_path() #Disable to write
-    #print(model.get_unigram_dct())
-    #print(model.get_unigram_dct)
