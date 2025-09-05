@@ -13,7 +13,6 @@ def align_files(audio_lst, text_lst):
     couples = []
     for audio, txt in zip(sorted(audio_lst), sorted(text_lst)):
         couples.append((audio, txt))
-        #print(couples)
     return couples
 
 
@@ -24,8 +23,8 @@ def maus_wrapper(audio_par):
             '-F', f'SIGNAL=@{audio_par[0]}',
             '-F', 'LANGUAGE=eng-US', #rus-RU, spa-ES...
             '-F', 'MODUS=align',
-            '-F', 'INSKANTEXTGRID=true', # must be TRUE
-            '-F', 'RELAXMINDUR=false', # UPDATE april: This should be TRUE, but evaluation has done with FALSE
+            '-F', 'INSKANTEXTGRID=true', 
+            '-F', 'RELAXMINDUR=false', 
             '-F', 'OUTFORMAT=TextGrid',
             '-F', 'TARGETRATE=100000',
             '-F', 'ENDWORD=999999',
@@ -49,7 +48,7 @@ def maus_wrapper(audio_par):
 
     process = subprocess.run(command, capture_output=True, text=True, encoding='latin-1')
 
-    # Save the response to a file
+    # Save the MAUS response to a .txt file
     output_file = audio_par[0].split('.')[0]
     print('Output File:')
     print(output_file)
@@ -65,27 +64,22 @@ def maus_wrapper(audio_par):
     # Save TextGrid to a file
     output = read_output(output_file_name)
     url = get_url(output)
-    #print(url) #debug
     download_textgrid(url[0], output_file)
 
 
 if __name__ == '__main__':
     bible_id = sys.argv[1]
     res = "/Volumes/One Touch/MacAir-2025/5LN709/audio" #ROOT
-    audio = f'/{bible_id}/audio' #audio_trim_last is the folder with the audio files trimmed at the beginning AND at the end of the chapter.
+    audio = f'/{bible_id}/audio' #.wav FOLDER with trimmed audio
     par = f'/{bible_id}/par' # .par FOLDER
     audio_path = res+audio
     par_path = res+par
-    #tg_path = res+tg
     print('--Audio path:')
     print(audio_path)
     print('-'*40)
     print('--Par path:')
     print(par_path)
     print('-'*40)
-    #print('--TextGrid path:')
-    #print(tg_path)
-    #print('-'*40)
 
     # Loop over .wav files
     audio_lst = [os.path.join(audio_path, fil) for fil in os.listdir(audio_path) if fil.endswith(".wav")]
