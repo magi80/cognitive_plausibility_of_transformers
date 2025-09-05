@@ -85,15 +85,15 @@ if __name__ == '__main__':
     audio_lst = [os.path.join(audio_path, fil) for fil in os.listdir(audio_path) if fil.endswith(".wav")]
     # Loop over .par files
     par_lst = [os.path.join(par_path, fil) for fil in os.listdir(par_path) if fil.endswith(".par")]
-    print('**Audio files:')
+    print('--Audio files:')
     print(sorted(audio_lst))
     print('-'*40)
-    print('**Par files:')
+    print('--Par files:')
     print(sorted(par_lst))
     print('-'*40)
 
     aligned = align_files(audio_lst, par_lst)
-    print('**Aligned Files:')
+    print('--Aligned Files:')
     print(aligned)
     print('-'*40)
 
