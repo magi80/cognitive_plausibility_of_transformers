@@ -7,7 +7,7 @@ The following pipeline was built to pre-process speech recordings of the King Ja
 
 ### 1.1 Audio segmentation
 
-The script `audio_segment_pipe.py` was used to trim the introductory and concluding speeches across the 260 audio files. Each file contains an introductory speech and concluding speeches are found in the last audio of each bookw. The principle is to trim the last pause before the real speech starts and the first pause before the concluding speech ends at the midpoint. Note that different languages do not necessarily contain these extra speeches, and the extent of both the introductory and concluding speeches varies. Then, the audio recordings are converted to `wav` with the function `convert_to_wav.py`.convert_to_wav.py handles the conversion
+The script `audio_segment_pipe.py` was used to trim the introductory and concluding speeches across the 260 audio files. Each file contains an introductory speech and concluding speeches are found in the last audio of each bookw. The principle is to trim the last pause before the real speech starts and the first pause before the concluding speech ends at the midpoint. Note that different languages do not necessarily contain these extra speeches, and the extent of both the introductory and concluding speeches varies. Then, all the 260 audio recordings are converted to `.wav` using the script `convert_to_wav.py`.
 
 
 ### 1.2 Text and Audio Pre-processing
