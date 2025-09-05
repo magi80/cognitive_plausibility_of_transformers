@@ -9,10 +9,8 @@ The following pipeline was built to pre-process speech recordings of the King Ja
 
 The script `audio_segment_pipe.py` was used to trim the introductory and concluding speeches across the 260 audio files. Each file contains an introductory speech and concluding speeches are found in the last audio of each bookw. The principle is to trim the last pause before the real speech starts and the first pause before the concluding speech ends at the midpoint. Note that different languages do not necessarily contain these extra speeches, and the extent of both the introductory and concluding speeches varies. Then, all the 260 audio recordings are converted to `.wav` using the script `convert_to_wav.py`.
 
-
 ### 1.2 Text and Audio Pre-processing
-
-The 260 orthographic texts are already provided as JSON files in the `json` folder for practical reasons. The `OrthographicText` class in the function `orth_class_pipe.py` with the flag `open_jason` set to `True` will open the saved files without the need of re-run the web scraping and parsing process with the `BeautifulSoup` library. 
+The 260 Bible texts are already provided as JSON files in the `json` folder for practical reasons. The `OrthographicText` class in the function `orth_class_pipe.py` with the flag `open_jason` set to `True` will open the saved files without the need to re-run the web scraping and parsing process with the `BeautifulSoup` library. The function `_normalize` normalizes the Bible texts by lowercasing and stripping punctuation. The 260 normalized texts are then saved in the `text` folder for further conversion into phonetic transcriptions.
 
 The `ExtractFeatures` class in the `feature_class_pipe.py` scripts inherits the functionalities of the `OrthographicText` class. This class will extract articulation rates, estimate word lengths (i.e., the total number of syllables), and assign the values `0` and `1` to the dummy variables `first` and `last` (i.e., to the first and last word within each sentence). The flag `statistics` set to `True` prints useful information on the screen for debugging, such as the total token count for each chapter. Running the script with the flag `write_to_file` set to `True` will save five CSV tables in the folder. The CSV table based on the `ALL_DATA` dataframe contains all the variables.
 
