@@ -43,6 +43,10 @@ Surprisal estimation is conducted by the `eval_surp.py` function in the `extract
 
 - `python3 extract_surprisal_gpt2.py ENGKJV gpt 512 True`
 
-Change `gpt`to `bert` and `512` to the desired window size. The `write` flag set to `True` will create a CSV file with two columns: the reconstructed tokens and their suprisal estimates. Each CSV are padded with `None` tokens to ensure index alignment across different context windows.
+Change `gpt`to `bert` and `512` to the desired window size. The `write` flag set to `True` will create a CSV file with two columns: the reconstructed tokens and their surprisal estimates. Each CSV are padded with `None` tokens to ensure index alignment across different context windows.
 
-## 4. Generalized Linear Models (GLMS)
+## 4. Statistical Models
+
+The Research Questions (RQ1 and RQ2) are addressed using six Generalized Linear Models (GLMs), using the [`statsmodels`](https://www.statsmodels.org/stable/examples/notebooks/generated/glm.html) library. The results for RQ1 are based on the `rq1_jsd.py` and `rq1_ppp.py` scripts, and the results for RQ2 are based on the `rq2_glms.py` script. 
+
+The log-likelihood and Delta values of the `data` variable in the `rq1_ppp.py` script have been obtained by the `Padding` class in the `rq2_glms.py` script. Here, the fuction `glmm` creates six full GLMs, while six null baselines GLMs (i.e., without the surprisal predictor and the interaction variables) are created by the `null_model` variable. The results of the `glmm` function, consisting of the Akaike's Information Criterion ([AIC](https://link.springer.com/rwe/10.1007/978-3-642-04898-2_110)) score, the log-likelihood, and the transformed coefficients in syllables per second, are printed on the screen, or can be saved with the `write_summary` flag set to `True`.
