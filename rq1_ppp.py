@@ -3,37 +3,67 @@ import sys
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
+# Log-likelihood scores obtained from rthe r2_glms.py scripts
+data = {'models': ['GPT2-512', 'GPT2-256', 'GPT2-128',
+                   'BERT-512', 'BERT-256', 'BERT-128'],
+        'perplexity': [31.84, 33.08, 47.71,
+                       8.00, 7.53, 10.87],
+        'log_lik': [-114256.77915877078, -59207.6548053951, -29407.999814581315, 
+                    -108690.28349505928, -52312.96132379862, -25641.41919112911], 
+        'delta_ll': [728.679, 113.073, 635.813, 2161.859, 4421.912, 2815.702]}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Add a new column to tag model type
+df['model_type'] = df['models'].apply(lambda x: 'GPT-2' if 'GPT2' in x else 'BERT')
+df['size'] = df['models'].str.extract(r'-(\d+)').astype(int)
+gpt_df = df[df['models'].str.contains("GPT2")]
+bert_df = df[df['models'].str.contains("BERT")]
+print(df[['models', 'size']])
+
+palette = {128: "#2ca02c", 256: "#ff7f0e", 512: "#1f77b4"}
+
+#plt.figure(figsize=(10, 6))
+
+sns.scatterplot(data=gpt_df, x='perplexity', y='delta_ll', hue='size',
+                s=50, edgecolor='black', alpha=0.6, marker='o', #style='size',
+                palette=palette)
+sns.scatterplot(data=bert_df, x='perplexity', y='delta_ll', hue='size',
+                s=50, edgecolor='black', alpha=0.6, marker='s', #style='size',
+                palette=palette)
+
+# Converting the x-axis to the log scale
+plt.xscale('log', base=2)
+ticks = [2**i for i in range(2, 7)] 
+plt.xticks(ticks)
+plt.gca().xaxis.set_major_formatter(mticker.FuncFormatter(
+    lambda val, pos: f"$2^{int(np.log2(val))}$"
+))
+
+# Annotate datapoints
+for i, row in df.iterrows():
+    plt.annotate(row['models'], 
+                 xy=(row['perplexity'], row['delta_ll']),
+                 xycoords='data',
+                 xytext=(2, 11),  # offset label 5 points to the right (4, 10)
+                 textcoords='offset points',
+                 fontsize=8,
+                 arrowprops=dict(arrowstyle='-', color='gray', lw=0.5),
+                 ha='right', va='top')
 
 
-gpt2_file = sys.argv[1]
-bert_file = sys.argv[2]
+plt.xlabel("Perplexity")
+plt.ylabel("ΔLL")
+plt.title("PPP of GPT-2 and BERT Models (ΔLL vs. PPL)")
+plt.grid(True)
 
-gpt2_csv = pd.read_csv(gpt2_file, delimiter='\t')
-bert_csv = pd.read_csv(bert_file, delimiter='\t')
-
-##gpt2_csv.dropna()
-#bert_csv.dropna()
-
-combined = gpt2_csv.join(bert_csv, lsuffix='_gpt2', rsuffix='_bert')
-#combined.to_csv('fuck.csv', sep='\t')
-
-comb = pd.DataFrame(combined, columns=['tokens_gpt2', 'surprisal_gpt2', 'tokens_bert', 'surprisal_bert'])
-#print(comb)
-comb.to_csv('COMB1.csv', sep='\t')
-
-co = comb[comb['tokens_gpt2'] == comb['tokens_bert']]
-co.to_csv('COMB2.csv', sep='\t')
-
-co['prob_gpt2'] = np.exp2(-co['surprisal_gpt2'])
-co['prob_bert'] = np.exp2(-co['surprisal_bert'])
-#co.to_csv('ARGHt.csv', sep='\t')
-#diff1 = gpt2_csv[~gpt2_csv.apply(tuple, axis=1).isin(bert_csv.apply(tuple, axis=1))]
-#diff1.to_csv('diomerdoso.csv', sep='\t')
-#read_csv['prob'] = np.exp2(-read_csv['surprisal'])
-#read_csv['p_norm'] = read_csv['prob'] / np.sum(read_csv['prob'])
-
-##print(read_csv['p_norm'])
-#print(np.sum(read_csv['p_norm']))
-
-#sns.histplot(data=read_csv, x=-np.log2(read_csv['p_norm']), bins=100)
-#plt.show()
+# Combined legend with size and model type
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))  
+plt.legend(by_label.values(), by_label.keys(), title="Size")
+plt.tight_layout()
+plt.savefig('PPP_plot.png', dpi=300)
+plt.show()
